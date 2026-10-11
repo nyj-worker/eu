@@ -2,9 +2,9 @@
 <html lang="ko" data-theme="light" data-font="sans" data-font-size="normal">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
   <title>이베리아 트래블 마스터 2026 | 오픈위키 (Open Wiki)</title>
-  <meta name="description" content="스페인·포르투갈 4050 6인 여행 완벽 가이드 오픈위키 시스템 - 원문 100% 충실도, 3종 뷰어 모드, 실시간 형광펜 및 주석 엔진, 실무 보조 도구 및 상세 체크리스트">
+  <meta name="description" content="스페인·포르투갈 4050 6인 여행 완벽 가이드 모바일 최적화 오픈위키 시스템 - 원문 100% 충실도, 3종 뷰어 모드, 실시간 형광펜 및 주석 엔진, 실무 보조 도구 및 상세 체크리스트">
 
   <!-- 스타일시트 연동 -->
   <link rel="stylesheet" href="style.css">
@@ -23,40 +23,58 @@
   <!-- ========================================================================= -->
   <header id="global-header">
     <div class="header-inner">
-      <!-- 로고 및 사이드바 토글 버튼 (모바일 겸용) -->
-      <div class="header-brand-group">
-        <button type="button" id="sidebar-toggle-btn" class="icon-btn" title="사이드바 열기/닫기" aria-label="사이드바 열기/닫기">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
-          </svg>
-        </button>
-        <div class="brand-title">
-          <span class="flag-icons">🇪🇸🇵🇹</span>
-          <span class="brand-main">이베리아 위키</span>
-          <span class="brand-sub">Iberia Travel Master 2026</span>
+      <!-- 상단 1행: 로고 & 모바일 메뉴 토글 & 주요 도구 액션 -->
+      <div class="header-main-row">
+        <div class="header-brand-group">
+          <button type="button" id="sidebar-toggle-btn" class="icon-btn mobile-menu-btn" title="목차 열기" aria-label="목차 열기">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+          <div class="brand-title">
+            <span class="flag-icons">🇪🇸🇵🇹</span>
+            <span class="brand-main">이베리아 위키</span>
+            <span class="brand-sub">Travel Master</span>
+          </div>
+        </div>
+
+        <!-- 3종 뷰 모드 스위처 (원문 뷰 / 요약 뷰 / 병기 뷰) -->
+        <div class="view-mode-selector" role="radiogroup" aria-label="뷰어 모드 선택">
+          <button type="button" class="view-mode-btn active" data-view="original" id="view-mode-original">
+            <span class="view-icon">📄</span>
+            <span class="view-text">원문</span>
+          </button>
+          <button type="button" class="view-mode-btn" data-view="summary" id="view-mode-summary">
+            <span class="view-icon">⚡</span>
+            <span class="view-text">요약</span>
+          </button>
+          <button type="button" class="view-mode-btn" data-view="dual" id="view-mode-dual">
+            <span class="view-icon">📑</span>
+            <span class="view-text">병기</span>
+          </button>
+        </div>
+
+        <!-- 우측 액션 도구: 실무도구, 학습보관함, 환경설정 -->
+        <div class="header-actions-group">
+          <!-- 실무 보조 도구 모달 버튼 -->
+          <button type="button" id="open-tools-btn" class="action-btn" title="실무 도구 모음 (환율/체크리스트/회화)">
+            <span class="btn-icon">🧰</span>
+            <span class="btn-label">도구</span>
+          </button>
+
+          <!-- 학습 보관함 모달 버튼 -->
+          <button type="button" id="open-notebook-btn" class="action-btn highlight-accent" title="개인화 학습 보관함 (형광펜/메모/백업)">
+            <span class="btn-icon">📚</span>
+            <span class="btn-label">보관함</span>
+            <span id="header-annotation-badge" class="badge-count">0</span>
+          </button>
         </div>
       </div>
 
-      <!-- 중앙: 3종 뷰 모드 스위처 (원문 뷰 / 요약 뷰 / 병기 뷰) -->
-      <div class="view-mode-selector" role="radiogroup" aria-label="뷰어 모드 선택">
-        <button type="button" class="view-mode-btn active" data-view="original" id="view-mode-original">
-          <span class="view-icon">📄</span>
-          <span class="view-text">원문 뷰</span>
-        </button>
-        <button type="button" class="view-mode-btn" data-view="summary" id="view-mode-summary">
-          <span class="view-icon">⚡</span>
-          <span class="view-text">요약 뷰</span>
-        </button>
-        <button type="button" class="view-mode-btn" data-view="dual" id="view-mode-dual">
-          <span class="view-icon">📑</span>
-          <span class="view-text">병기 뷰</span>
-        </button>
-      </div>
-
-      <!-- 우측: 텍스트 크기, 서체, 테마, 실무도구, 학습보관함 버튼 -->
-      <div class="header-controls">
+      <!-- 상단 2행 (모바일 및 데스크톱 환경설정 바: 글자크기, 서체, 테마) -->
+      <div class="header-sub-controls">
         <!-- 텍스트 크기 조절 (보통 / 크게 / 아주 크게) -->
         <div class="control-group font-size-group">
           <button type="button" class="ctrl-btn font-size-btn active" data-size="normal" title="보통 글자 (16px)">A</button>
@@ -76,39 +94,32 @@
           <button type="button" class="ctrl-btn theme-btn" data-theme="dark" title="다크 모드 (OLED 딥 블랙)">🌙</button>
           <button type="button" class="ctrl-btn theme-btn" data-theme="sepia" title="세피아 모드 (눈편한 종이)">📜</button>
         </div>
-
-        <!-- 실무 보조 도구 모달 버튼 -->
-        <button type="button" id="open-tools-btn" class="action-btn" title="실무 도구 모음 (환율/체크리스트/회화)">
-          <span class="btn-icon">🧰</span>
-          <span class="btn-label">실무 도구</span>
-        </button>
-
-        <!-- 학습 보관함 모달 버튼 -->
-        <button type="button" id="open-notebook-btn" class="action-btn highlight-accent" title="개인화 학습 보관함 (형광펜/메모/백업)">
-          <span class="btn-icon">📚</span>
-          <span class="btn-label">학습 보관함</span>
-          <span id="header-annotation-badge" class="badge-count">0</span>
-        </button>
       </div>
     </div>
   </header>
 
   <!-- ========================================================================= -->
-  <!-- 3. 메인 앱 컨테이너 (사이드바 + 리사이저 + 본문 콘텐츠)                     -->
+  <!-- 3. 메인 앱 컨테이너 (사이드바 + 모바일 백드롭 + 리사이저 + 본문 콘텐츠)     -->
   <!-- ========================================================================= -->
   <div id="app-container">
 
-    <!-- 좌측 사이드바 (TOC 목차 및 검색) -->
+    <!-- 모바일 사이드바 드로어 열림 시 배경 백드롭 -->
+    <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
+
+    <!-- 좌측 사이드바 (데스크톱 고정 & 모바일 슬라이드 드로어) -->
     <aside id="wiki-sidebar">
       <div class="sidebar-header">
-        <h2 class="sidebar-title">목차 (TOC)</h2>
-        <span class="sidebar-subtitle">스페인·포르투갈 6인 가이드</span>
+        <div class="sidebar-header-top">
+          <h2 class="sidebar-title">📖 목차 (TOC)</h2>
+          <button type="button" id="sidebar-close-btn" class="sidebar-close-btn" title="목차 닫기" aria-label="목차 닫기">✕</button>
+        </div>
+        <span class="sidebar-subtitle">스페인·포르투갈 6인 마스터 가이드</span>
       </div>
 
       <!-- 실시간 검색 입력창 -->
       <div class="sidebar-search-box">
         <span class="search-icon">🔍</span>
-        <input type="text" id="wiki-search-input" placeholder="키워드 검색 (예: 렌페, 소매치기, 빠에야)..." autocomplete="off">
+        <input type="text" id="wiki-search-input" placeholder="키워드 검색 (렌페, 소매치기, 빠에야)..." autocomplete="off">
         <button type="button" id="clear-search-btn" class="clear-search-btn" style="display: none;" title="검색어 지우기">✕</button>
       </div>
 
@@ -121,12 +132,12 @@
       <div class="sidebar-footer">
         <div class="shortcut-guide">
           <span>⌨️ 단축키:</span>
-          <code>←</code> <code>→</code> 조문 이동 &bull; <code>ESC</code> 닫기
+          <code>←</code> <code>→</code> 챕터 이동 &bull; <code>ESC</code> 닫기
         </div>
       </div>
     </aside>
 
-    <!-- 사이드바 너비 조절 리사이저 바 핸들 -->
+    <!-- 사이드바 너비 조절 리사이저 바 핸들 (데스크톱 전용) -->
     <div id="sidebar-resizer" title="드래그하여 사이드바 너비 조절 (더블 클릭 시 320px 기본값 복원)">
       <div class="resizer-handle-indicator"></div>
     </div>
@@ -137,13 +148,13 @@
       <section class="wiki-intro-banner">
         <div class="banner-content">
           <div class="banner-meta">
-            <span class="meta-tag">📅 10월 28일 ~ 11월 6일 (가을 시즌)</span>
-            <span class="meta-tag">👥 40대 후반~50대 초반 성인 6인 (남3, 여3)</span>
-            <span class="meta-tag">📍 스페인(마드리드/바르셀로나) &bull; 포르투갈(리스본/포르투)</span>
+            <span class="meta-tag">📅 10월 28일 ~ 11월 6일</span>
+            <span class="meta-tag">👥 4050 성인 6인 팀</span>
+            <span class="meta-tag">📍 스페인 &bull; 포르투갈</span>
           </div>
           <h1 class="banner-title">스페인·포르투갈 4050 성인 6인 팀 여행 마스터 가이드</h1>
           <p class="banner-desc">
-            형광펜과 밑줄을 긋거나 나만의 메모를 남겨보세요. 모든 주석과 설정은 브라우저에 영구 저장됩니다.
+            텍스트를 길게 누르거나 드래그하여 형광펜과 메모를 남겨보세요. 모든 주석과 체크리스트는 스마트폰에 영구 저장됩니다.
           </p>
         </div>
       </section>
@@ -205,7 +216,7 @@
   <!-- 5. 플로팅 탑(Top) 버튼 (SVG 실시간 원형 스크롤 진행률 링)                  -->
   <!-- ========================================================================= -->
   <button type="button" id="floating-top-btn" class="floating-top-btn" title="맨 위로 스크롤" aria-label="맨 위로 이동">
-    <svg class="progress-ring" width="48" height="48" viewBox="0 0 48 48">
+    <svg class="progress-ring" width="46" height="46" viewBox="0 0 48 48">
       <circle class="progress-ring-bg" cx="24" cy="24" r="20"></circle>
       <circle class="progress-ring-circle" id="top-progress-circle" cx="24" cy="24" r="20" stroke-dasharray="125.66" stroke-dashoffset="125.66"></circle>
     </svg>
@@ -325,7 +336,7 @@
       <div class="modal-footer notebook-footer">
         <div class="backup-tools">
           <button type="button" class="btn btn-secondary-sm" onclick="exportAnnotationsJSON()">
-            💾 JSON 데이터 내보내기
+            💾 JSON 내보내기
           </button>
           <label class="btn btn-secondary-sm import-label">
             📂 JSON 불러오기
@@ -353,13 +364,13 @@
       <!-- 3종 도구 탭 메뉴 -->
       <div class="tools-tab-bar" role="tablist">
         <button type="button" class="tool-tab-btn active" data-tab="tab-calc" role="tab">
-          💶 유로 환율 & 6인 더치페이 계산기
+          💶 환율 & 6인 정산
         </button>
         <button type="button" class="tool-tab-btn" data-tab="tab-check" role="tab">
-          📋 6인 필수 준비물 체크리스트
+          📋 필수 준비물 체크
         </button>
         <button type="button" class="tool-tab-btn" data-tab="tab-phrase" role="tab">
-          🗣️ 서바이벌 회화(TTS) & 비상 연락망
+          🗣️ 회화(TTS) & 연락망
         </button>
       </div>
 
@@ -430,7 +441,7 @@
           <div class="checklist-header-row">
             <div class="checklist-intro-text">
               <strong>🎒 4050 6인 이베리아 여행 필수 준비물 (35종)</strong>
-              <p class="checklist-guide">체크한 항목은 브라우저에 실시간 자동 저장됩니다. 준비 완료 현황을 한눈에 파악하세요.</p>
+              <p class="checklist-guide">체크한 항목은 스마트폰에 실시간 저장됩니다.</p>
             </div>
             <div class="checklist-progress-wrap">
               <span id="checklist-progress-text">완료 0 / 35 (0%)</span>
@@ -440,26 +451,26 @@
             </div>
           </div>
 
-          <!-- 카테고리 필터 칩 바 -->
+          <!-- 카테고리 필터 칩 바 (모바일 가로 스크롤 지원) -->
           <div class="checklist-category-filter" id="checklist-category-filter">
-            <button type="button" class="chk-filter-chip active" data-category="all">전체보기</button>
-            <button type="button" class="chk-filter-chip" data-category="필수서류">📄 필수서류</button>
-            <button type="button" class="chk-filter-chip" data-category="금융/결제">💳 금융/결제</button>
-            <button type="button" class="chk-filter-chip" data-category="보안/방범">🔒 보안/방범</button>
-            <button type="button" class="chk-filter-chip" data-category="전자/통신">📱 전자/통신</button>
-            <button type="button" class="chk-filter-chip" data-category="건강/의약">💊 건강/의약</button>
-            <button type="button" class="chk-filter-chip" data-category="의류/신발">👟 의류/신발</button>
-            <button type="button" class="chk-filter-chip" data-category="음식/위생">🍜 음식/위생</button>
+            <button type="button" class="chk-filter-chip active" data-category="all">전체</button>
+            <button type="button" class="chk-filter-chip" data-category="필수서류">📄 서류</button>
+            <button type="button" class="chk-filter-chip" data-category="금융/결제">💳 금융</button>
+            <button type="button" class="chk-filter-chip" data-category="보안/방범">🔒 방범</button>
+            <button type="button" class="chk-filter-chip" data-category="전자/통신">📱 전자</button>
+            <button type="button" class="chk-filter-chip" data-category="건강/의약">💊 의약</button>
+            <button type="button" class="chk-filter-chip" data-category="의류/신발">👟 의류</button>
+            <button type="button" class="chk-filter-chip" data-category="음식/위생">🍜 위생</button>
           </div>
 
           <!-- 내 준비물 직접 추가 폼 -->
           <div class="add-custom-item-box">
-            <input type="text" id="custom-item-input" placeholder="+ 나만의 준비물 추가 (예: 접이식 포트, 비타민C, 여벌 안경)...">
+            <input type="text" id="custom-item-input" placeholder="+ 나만의 준비물 추가...">
             <select id="custom-item-cat">
-              <option value="개인소지품">개인소지품</option>
-              <option value="필수서류">필수서류</option>
-              <option value="전자/통신">전자/통신</option>
-              <option value="건강/의약">건강/의약</option>
+              <option value="개인소지품">소지품</option>
+              <option value="필수서류">서류</option>
+              <option value="전자/통신">전자</option>
+              <option value="건강/의약">의약</option>
             </select>
             <button type="button" class="btn btn-primary" id="add-custom-item-btn">추가</button>
           </div>
@@ -473,7 +484,7 @@
         <!-- 탭 3: 서바이벌 회화(TTS) & 비상 연락망 -->
         <div id="tab-phrase" class="tool-tab-panel" style="display: none;">
           <div class="phrase-section">
-            <h4>🗣️ 현지 필수 서바이벌 회화 (스피커 아이콘을 누르면 발음 재생)</h4>
+            <h4>🗣️ 현지 서바이벌 회화 (스피커를 누르면 발음 재생)</h4>
             <div id="phrase-cards-container" class="phrase-cards-container">
               <!-- JS에서 회화 목록 주입 -->
             </div>
@@ -502,14 +513,14 @@
       <div class="modal-header">
         <div class="modal-title-wrap">
           <span class="modal-icon">🖨️</span>
-          <h3 id="paper-modal-title">비상용 아날로그 마스터 페이퍼 (A4 인쇄 프리뷰)</h3>
+          <h3 id="paper-modal-title">비상용 아날로그 마스터 페이퍼 (A4 프리뷰)</h3>
         </div>
         <button type="button" class="modal-close-btn" onclick="closeMasterPaperModal()" aria-label="닫기">✕</button>
       </div>
 
       <div class="modal-body paper-preview-body">
         <p class="paper-desc-alert">
-          아래 빈칸에 정보를 입력한 뒤 [A4 인쇄하기] 버튼을 누르면 인쇄용 레이아웃으로 깔끔하게 출력할 수 있습니다.
+          대원 정보를 입력한 뒤 [A4 인쇄하기]를 누르면 인쇄용 레이아웃으로 출력됩니다.
         </p>
 
         <!-- 인쇄 영역 Sheet 1 -->
@@ -567,7 +578,7 @@
           <div class="insurance-inputs-row">
             <div class="input-card full-width">
               <label>여행자보험 가입사 및 증권/계약번호:</label>
-              <input type="text" id="paper-insurance" placeholder="예: 삼성화재 다이렉트 해외여행보험 / 계약번호 2026-98765432">
+              <input type="text" id="paper-insurance" placeholder="예: 삼성화재 다이렉트 / 계약 2026-98765432">
             </div>
             <div class="input-card full-width">
               <label>해외 긴급 의료지원 센터 직통 번호:</label>
@@ -596,22 +607,22 @@
                 <tr>
                   <td>주스페인 대한민국 대사관 (마드리드)</td>
                   <td><strong>+34 913 514 133</strong></td>
-                  <td>사건사고 비상 +34 647 812 770</td>
+                  <td>비상 +34 647 812 770</td>
                 </tr>
                 <tr>
                   <td>바르셀로나 대한민국 총영사관</td>
                   <td><strong>+34 934 856 046</strong></td>
-                  <td>당직전화 +34 682 862 431</td>
+                  <td>비상 +34 682 862 431</td>
                 </tr>
                 <tr>
                   <td>주포르투갈 대한민국 대사관 (리스본)</td>
                   <td><strong>+351 217 937 200</strong></td>
-                  <td>긴급전화 +351 910 795 055</td>
+                  <td>비상 +351 910 795 055</td>
                 </tr>
                 <tr>
                   <td>하나카드 해외분실신고 센터</td>
                   <td><strong>+82 2 950 8510</strong></td>
-                  <td>24시간 즉시 정지</td>
+                  <td>24시간 정지</td>
                 </tr>
               </tbody>
             </table>

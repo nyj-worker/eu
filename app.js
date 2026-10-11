@@ -1,12 +1,12 @@
 /**
  * ==============================================================================
- * [app.js] 이베리아 트래블 마스터 오픈위키 코어 엔진
+ * [app.js] 이베리아 트래블 마스터 오픈위키 코어 엔진 (모바일 반응형 최적화)
  * ==============================================================================
  * 본 스크립트는 다음 기능을 전담합니다:
  * 1. 3종 뷰어 모드(원문/요약/병기) 동적 렌더링 엔진
- * 2. 사이드바 리사이저(220px~600px 드래그, 더블클릭 320px 리셋, 로컬스토리지 저장)
+ * 2. 사이드바 반응형 제어 (데스크톱 드래그 리사이징 & 모바일 슬라이드 드로어 제어)
  * 3. 3종 테마, 서체, 폰트 크기 상태 영구 관리
- * 4. 무결점 실시간 형광펜 & 밑줄 & 메모 주석 엔진 (Range 래핑, 자동 복원, 인라인 삭제)
+ * 4. 무결점 실시간 형광펜 & 밑줄 & 메모 주석 엔진 (모바일 터치 경계 계산, Range 래핑, 자동 복원)
  * 5. 개인화 학습 보관함 (필터링, 검색, JSON 백업/복원)
  * 6. 실무 보조 인터랙티브 도구 (환율/경비 계산기, 35종 상세 체크리스트, 회화 음성 TTS, 긴급망)
  * 7. 비상용 마스터 페이퍼 입력 & 인쇄 프리뷰
@@ -30,7 +30,7 @@ const WikiState = {
   // 폰트 크기: 'normal' (16px), 'large' (18px), 'xlarge' (20px)
   currentFontSize: localStorage.getItem("wiki_font_size") || "normal",
 
-  // 사이드바 너비 (px)
+  // 사이드바 너비 (px, 데스크톱용)
   sidebarWidth: parseInt(localStorage.getItem("wiki_sidebar_width"), 10) || 320,
 
   // 저장된 주석(형광펜, 밑줄, 메모) 목록
@@ -71,10 +71,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // 4. 저장된 주석(형광펜/밑줄) 본문 자동 복원
   restoreAllAnnotations();
 
-  // 5. 사이드바 리사이저 바 이벤트 바인딩
+  // 5. 사이드바 리사이저 및 모바일 드로어 이벤트 바인딩
   initSidebarResizer();
 
-  // 6. 상단 글로벌 컨트롤러 이벤트 바인딩
+  // 6. 상단 글로벌 컨트롤러 이벤트 바인딩 (모바일 메뉴 포함)
   initHeaderControls();
 
   // 7. 실시간 텍스트 드래그 플로팅 툴바 바인딩
@@ -118,16 +118,18 @@ function applySavedPreferences() {
     btn.classList.toggle("active", btn.dataset.view === WikiState.currentView);
   });
 
-  // 사이드바 너비 복원 (안전 범위 220px ~ 600px 검증)
-  const sidebar = document.getElementById("wiki-sidebar");
-  if (sidebar) {
-    const safeWidth = Math.max(220, Math.min(600, WikiState.sidebarWidth));
-    sidebar.style.width = `${safeWidth}px`;
+  // 사이드바 너비 복원 (데스크톱 너비 기준)
+  if (window.innerWidth > 768) {
+    const sidebar = document.getElementById("wiki-sidebar");
+    if (sidebar) {
+      const safeWidth = Math.max(220, Math.min(600, WikiState.sidebarWidth));
+      sidebar.style.width = `${safeWidth}px`;
+    }
   }
 }
 
 // =============================================================================
-// 2. 사이드바 목차(TOC) 렌더링 & 실시간 검색 필터링
+// 2. 사이드바 목차(TOC) 렌더링 & 실시간 검색 필터링 (모바일 연동)
 // =============================================================================
 function renderSidebarNav() {
   const navContainer = document.getElementById("sidebar-nav");
@@ -151,7 +153,7 @@ function renderSidebarNav() {
     `;
   }).join("");
 
-  // 클릭 시 스무스 스크롤 이동
+  // 클릭 시 스무스 스크롤 이동 및 모바일에서 사이드바 드로어 자동 닫기
   navContainer.querySelectorAll(".nav-item").forEach(item => {
     item.addEventListener("click", (e) => {
       e.preventDefault();
@@ -161,6 +163,11 @@ function renderSidebarNav() {
         targetEl.scrollIntoView({ behavior: "smooth", block: "start" });
         navContainer.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
         item.classList.add("active");
+
+        // 모바일 화면에서는 선택 후 사이드바 드로어 자동 닫기
+        if (window.innerWidth <= 768) {
+          closeMobileSidebar();
+        }
       }
     });
   });
@@ -214,7 +221,6 @@ function renderChapters() {
   const container = document.getElementById("wiki-content-container");
   if (!container) return;
 
-  // 컨테이너 클래스를 현재 뷰 모드에 맞게 설정
   container.className = `view-${WikiState.currentView}`;
 
   container.innerHTML = wikiChapters.map(chap => {
@@ -276,7 +282,7 @@ function renderChapters() {
 }
 
 // =============================================================================
-// 4. 사이드바 리사이저 바 (Resizer) 크기 조절 & 영구 보존 엔진
+// 4. 사이드바 리사이저 & 모바일 드로어 제어
 // =============================================================================
 function initSidebarResizer() {
   const resizer = document.getElementById("sidebar-resizer");
@@ -287,8 +293,9 @@ function initSidebarResizer() {
   let startX = 0;
   let startWidth = 0;
 
-  // 1. 마우스 누름: 리사이징 시작
+  // 마우스 누름: 리사이징 시작 (데스크톱 전용)
   resizer.addEventListener("mousedown", (e) => {
+    if (window.innerWidth <= 768) return;
     isResizing = true;
     startX = e.clientX;
     startWidth = sidebar.getBoundingClientRect().width;
@@ -296,7 +303,7 @@ function initSidebarResizer() {
     e.preventDefault();
   });
 
-  // 2. 마우스 이동: 실시간 너비 변경 (220px ~ 600px 안전 범위 제한)
+  // 마우스 이동: 실시간 너비 변경 (220px ~ 600px 안전 범위 제한)
   document.addEventListener("mousemove", (e) => {
     if (!isResizing) return;
     const deltaX = e.clientX - startX;
@@ -305,7 +312,7 @@ function initSidebarResizer() {
     WikiState.sidebarWidth = newWidth;
   });
 
-  // 3. 마우스 뗌: 리사이징 종료 및 로컬스토리지 영구 보존
+  // 마우스 뗌: 리사이징 종료 및 로컬스토리지 영구 보존
   document.addEventListener("mouseup", () => {
     if (isResizing) {
       isResizing = false;
@@ -314,8 +321,9 @@ function initSidebarResizer() {
     }
   });
 
-  // 4. 더블 클릭: 320px 기본값 즉시 복원
+  // 더블 클릭: 320px 기본값 즉시 복원
   resizer.addEventListener("dblclick", () => {
+    if (window.innerWidth <= 768) return;
     const defaultWidth = 320;
     sidebar.style.width = `${defaultWidth}px`;
     WikiState.sidebarWidth = defaultWidth;
@@ -323,18 +331,34 @@ function initSidebarResizer() {
   });
 }
 
+// 모바일 사이드바 열기/닫기 도우미 함수
+function toggleMobileSidebar() {
+  document.body.classList.toggle("sidebar-open");
+}
+function closeMobileSidebar() {
+  document.body.classList.remove("sidebar-open");
+}
+
 // =============================================================================
-// 5. 상단 헤더 컨트롤 바인딩 (뷰 모드, 테마, 서체, 폰트 크기)
+// 5. 상단 헤더 컨트롤 바인딩 (모바일 메뉴 & 백드롭 포함)
 // =============================================================================
 function initHeaderControls() {
-  // 모바일 사이드바 토글 버튼
+  // 모바일 햄버거 토글 버튼
   const toggleBtn = document.getElementById("sidebar-toggle-btn");
-  const sidebar = document.getElementById("wiki-sidebar");
-  if (toggleBtn && sidebar) {
-    toggleBtn.addEventListener("click", () => {
-      const isClosed = sidebar.style.display === "none";
-      sidebar.style.display = isClosed ? "flex" : "none";
-    });
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", toggleMobileSidebar);
+  }
+
+  // 모바일 사이드바 닫기 버튼
+  const closeBtn = document.getElementById("sidebar-close-btn");
+  if (closeBtn) {
+    closeBtn.addEventListener("click", closeMobileSidebar);
+  }
+
+  // 모바일 백드롭 클릭 시 닫기
+  const backdrop = document.getElementById("sidebar-backdrop");
+  if (backdrop) {
+    backdrop.addEventListener("click", closeMobileSidebar);
   }
 
   // 3종 뷰 모드 스위처
@@ -408,17 +432,20 @@ function initHeaderControls() {
 }
 
 // =============================================================================
-// 6. 실시간 텍스트 드래그 플로팅 툴바 & 하이라이트/주석 엔진
+// 6. 실시간 텍스트 드래그 플로팅 툴바 & 하이라이트/주석 엔진 (모바일 터치 최적화)
 // =============================================================================
 function initFloatingAnnotationToolbar() {
   const toolbar = document.getElementById("annotation-floating-toolbar");
   if (!toolbar) return;
 
-  // 1. 마우스/터치 선택 감지 (mouseup, touchend)
+  // 마우스/터치 선택 감지 (mouseup, touchend)
   document.addEventListener("mouseup", handleSelectionChange);
+  document.addEventListener("touchend", () => {
+    setTimeout(handleSelectionChange, 150);
+  });
   document.addEventListener("keyup", handleSelectionChange);
 
-  // 본문 바깥 클릭 시 툴바 숨김
+  // 본문 바깥 터치/클릭 시 툴바 숨김
   document.addEventListener("mousedown", (e) => {
     if (!toolbar.contains(e.target) && !e.target.closest(".wiki-highlight") && !e.target.closest(".underline-line")) {
       setTimeout(() => {
@@ -430,7 +457,7 @@ function initFloatingAnnotationToolbar() {
     }
   });
 
-  // 2. 형광펜 5종 클릭 이벤트
+  // 형광펜 5종 클릭 이벤트
   toolbar.querySelectorAll(".hl-color-btn").forEach(btn => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -439,7 +466,7 @@ function initFloatingAnnotationToolbar() {
     });
   });
 
-  // 3. 밑줄 3종 클릭 이벤트
+  // 밑줄 3종 클릭 이벤트
   toolbar.querySelectorAll(".underline-btn").forEach(btn => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -448,12 +475,11 @@ function initFloatingAnnotationToolbar() {
     });
   });
 
-  // 4. 메모(📝) 버튼 클릭 시
+  // 메모(📝) 버튼 클릭 시
   const memoBtn = document.getElementById("tb-memo-btn");
   if (memoBtn) {
     memoBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      // 기본 노랑 형광펜과 함께 즉시 메모 모달 오픈
       const ann = applyAnnotation({ type: "highlight", style: "#FEF08A", openModal: true });
       if (ann) {
         openMemoModalById(ann.id);
@@ -461,7 +487,7 @@ function initFloatingAnnotationToolbar() {
     });
   }
 
-  // 5. 지우개(🧹) 버튼 클릭 시
+  // 지우개(🧹) 버튼 클릭 시
   const eraseBtn = document.getElementById("tb-erase-btn");
   if (eraseBtn) {
     eraseBtn.addEventListener("click", (e) => {
@@ -471,7 +497,7 @@ function initFloatingAnnotationToolbar() {
   }
 }
 
-// 텍스트 선택 감지 및 툴바 위치 계산
+// 텍스트 선택 감지 및 툴바 위치 계산 (모바일 뷰포트 경계 이탈 방지)
 function handleSelectionChange() {
   const toolbar = document.getElementById("annotation-floating-toolbar");
   if (!toolbar) return;
@@ -499,17 +525,22 @@ function handleSelectionChange() {
     return;
   }
 
-  // Range 보관
   WikiState.currentSelectionRange = range;
 
-  // 툴바 좌표 계산 (선택 영역 상단 중앙에 플로팅)
+  // 툴바 좌표 계산
   const rect = range.getBoundingClientRect();
-  const toolbarWidth = 340;
-  let top = window.scrollY + rect.top - 54;
+  const toolbarWidth = Math.min(340, window.innerWidth - 24);
+  let top = window.scrollY + rect.top - 56;
   let left = window.scrollX + rect.left + (rect.width / 2) - (toolbarWidth / 2);
 
-  if (left < 10) left = 10;
-  if (top < 70) top = window.scrollY + rect.bottom + 12;
+  // 모바일 화면 좌우 밖으로 삐져나가지 않도록 경계 바운딩
+  const minLeft = window.scrollX + 10;
+  const maxLeft = window.scrollX + window.innerWidth - toolbarWidth - 10;
+  left = Math.max(minLeft, Math.min(left, maxLeft));
+
+  if (top < window.scrollY + 70) {
+    top = window.scrollY + rect.bottom + 12;
+  }
 
   toolbar.style.top = `${top}px`;
   toolbar.style.left = `${left}px`;
@@ -536,27 +567,23 @@ function applyAnnotation({ type, style, openModal = false }) {
   if (!chapterCard) return null;
   const chapterId = chapterCard.id;
 
-  // 새 주석 ID 생성
   const annId = "ann_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5);
 
   const newAnnotation = {
     id: annId,
     chapterId: chapterId,
-    type: type, // 'highlight' | 'underline'
-    style: style, // 색상코드(#FEF08A) 또는 밑줄클래스('solid-red')
+    type: type,
+    style: style,
     text: selectedText,
     memo: "",
     createdAt: new Date().toISOString()
   };
 
-  // DOM Range 래핑
   wrapRangeWithAnnotation(range, newAnnotation);
 
-  // 전역 상태 및 로컬스토리지 저장
   WikiState.annotations.push(newAnnotation);
   saveAnnotationsToStorage();
 
-  // 사이드바 목차 배지 및 전체 개수 갱신
   renderSidebarNav();
   updateGlobalAnnotationCount();
 
@@ -586,7 +613,6 @@ function wrapRangeWithAnnotation(range, ann) {
       span.classList.add("has-memo");
     }
 
-    // 클릭 시 주석 관리 모달 열기
     span.addEventListener("click", (e) => {
       e.stopPropagation();
       openMemoModalById(ann.id);
@@ -594,13 +620,11 @@ function wrapRangeWithAnnotation(range, ann) {
 
     range.surroundContents(span);
   } catch (err) {
-    // 다중 노드에 걸쳐 있는 경우 텍스트 노드 매칭 방식으로 안전하게 폴백
-    console.warn("surroundContents fallback 적용:", err);
     safeHighlightFallback(ann);
   }
 }
 
-// 텍스트 기반 안전 매칭 폴백 및 전체 자동 복원 함수
+// 텍스트 기반 안전 매칭 폴백 및 자동 복원 함수
 function safeHighlightFallback(ann) {
   const chapterCard = document.getElementById(ann.chapterId);
   if (!chapterCard) return;
@@ -645,15 +669,14 @@ function safeHighlightFallback(ann) {
 
       try {
         targetRange.surroundContents(span);
-        break; // 한 곳 매칭 완료
+        break;
       } catch (e) {
-        console.error("안전 매칭 실패:", e);
+        // 복합 DOM 안전 무시
       }
     }
   }
 }
 
-// 5종 형광펜 컬러 클래스 변환
 function getHighlightClass(color) {
   switch (color) {
     case "#FEF08A": return "hl-color-yellow";
@@ -665,7 +688,6 @@ function getHighlightClass(color) {
   }
 }
 
-// 선택 영역 내 주석 지우기 (지우개 버튼)
 function eraseAnnotationInSelection() {
   const toolbar = document.getElementById("annotation-floating-toolbar");
   if (toolbar) toolbar.style.display = "none";
@@ -684,7 +706,6 @@ function eraseAnnotationInSelection() {
   selection.removeAllRanges();
 }
 
-// 페이지 로드 및 뷰 모드 전환 시 저장된 모든 주석 자동 100% 복원
 function restoreAllAnnotations() {
   WikiState.annotations.forEach(ann => {
     safeHighlightFallback(ann);
@@ -709,7 +730,6 @@ function openMemoModalById(annId) {
   if (textarea) textarea.value = ann.memo || "";
   if (confirmBox) confirmBox.style.display = "none";
 
-  // 색상/밑줄 선택 옵션 활성화
   document.querySelectorAll(".style-opt-btn").forEach(btn => {
     const isCurrent = (ann.type === "highlight" && btn.dataset.color === ann.style) ||
                       (ann.type === "underline" && btn.dataset.underline === ann.style);
@@ -719,7 +739,6 @@ function openMemoModalById(annId) {
   modal.style.display = "flex";
   if (textarea) textarea.focus();
 
-  // 스타일 변경 버튼 바인딩
   bindMemoModalStylePickers(ann);
 }
 
@@ -739,14 +758,12 @@ function bindMemoModalStylePickers(ann) {
     };
   });
 
-  // 저장 버튼
   const saveBtn = document.getElementById("save-memo-btn");
   if (saveBtn) {
     saveBtn.onclick = () => {
       const textarea = document.getElementById("memo-textarea");
       ann.memo = textarea ? textarea.value.trim() : "";
 
-      // DOM 요소 즉시 반영
       const span = document.getElementById(ann.id);
       if (span) {
         span.className = ann.type === "highlight" 
@@ -761,7 +778,6 @@ function bindMemoModalStylePickers(ann) {
     };
   }
 
-  // 삭제 2단계 확인
   const triggerDelBtn = document.getElementById("trigger-delete-btn");
   const confirmDelBtn = document.getElementById("confirm-delete-btn");
   const cancelDelBtn = document.getElementById("cancel-delete-btn");
@@ -791,7 +807,6 @@ function closeMemoModal() {
   WikiState.activeAnnotationId = null;
 }
 
-// 주석 삭제 및 DOM 언래핑
 function deleteAnnotationById(annId) {
   const annIndex = WikiState.annotations.findIndex(a => a.id === annId);
   if (annIndex === -1) return;
@@ -800,7 +815,6 @@ function deleteAnnotationById(annId) {
   WikiState.annotations.splice(annIndex, 1);
   saveAnnotationsToStorage();
 
-  // DOM에서 span 태그 벗기기 (텍스트 내용 보존)
   const span = document.getElementById(annId);
   if (span && span.parentNode) {
     const parent = span.parentNode;
@@ -835,7 +849,6 @@ function openNotebookModal() {
   modal.style.display = "flex";
   renderNotebookList("all", "");
 
-  // 필터 칩 이벤트 바인딩
   document.querySelectorAll(".filter-chip").forEach(chip => {
     chip.onclick = () => {
       document.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
@@ -846,7 +859,6 @@ function openNotebookModal() {
     };
   });
 
-  // 검색창 이벤트 바인딩
   const searchInput = document.getElementById("notebook-search-input");
   if (searchInput) {
     searchInput.oninput = (e) => {
@@ -866,7 +878,6 @@ function renderNotebookList(filter, keyword) {
   const listContainer = document.getElementById("notebook-item-list");
   if (!listContainer) return;
 
-  // 카운트 업데이트
   const total = WikiState.annotations.length;
   const hlCount = WikiState.annotations.filter(a => a.type === "highlight").length;
   const ulCount = WikiState.annotations.filter(a => a.type === "underline").length;
@@ -877,7 +888,6 @@ function renderNotebookList(filter, keyword) {
   document.getElementById("nb-count-ul").textContent = ulCount;
   document.getElementById("nb-count-memo").textContent = memoCount;
 
-  // 필터링 적용
   let items = WikiState.annotations;
   if (filter === "highlight") items = items.filter(a => a.type === "highlight");
   if (filter === "underline") items = items.filter(a => a.type === "underline");
@@ -928,7 +938,6 @@ function renderNotebookList(filter, keyword) {
   }).join("");
 }
 
-// JSON 백업 내보내기 (다운로드)
 function exportAnnotationsJSON() {
   const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(WikiState.annotations, null, 2));
   const dlAnchor = document.createElement("a");
@@ -937,7 +946,6 @@ function exportAnnotationsJSON() {
   dlAnchor.click();
 }
 
-// JSON 백업 불러오기 (복원)
 function importAnnotationsJSON(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -966,7 +974,6 @@ function importAnnotationsJSON(event) {
 // 9. 실무 보조 도구 (환율 계산기, 35종 상세 체크리스트, 회화 TTS, 긴급망)
 // =============================================================================
 function initQuickTools() {
-  // 탭 전환 이벤트
   document.querySelectorAll(".tool-tab-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".tool-tab-btn").forEach(b => b.classList.remove("active"));
@@ -978,7 +985,6 @@ function initQuickTools() {
     });
   });
 
-  // (1) 계산기 로직
   const eurInput = document.getElementById("calc-eur-input");
   const rateInput = document.getElementById("calc-rate-input");
   const memberInput = document.getElementById("calc-member-count");
@@ -990,10 +996,7 @@ function initQuickTools() {
   });
   recalculateFinance();
 
-  // (2) 체크리스트 초기화 & 이벤트 바인딩
   initChecklistModule();
-
-  // (3) 서바이벌 회화 및 연락처 렌더링
   renderSurvivalPhrases();
   renderEmergencyContacts();
 }
@@ -1007,7 +1010,6 @@ function closeToolsModal() {
   if (modal) modal.style.display = "none";
 }
 
-// 유로/원화 및 6인 더치페이 계산 로직
 function recalculateFinance() {
   const eur = parseFloat(document.getElementById("calc-eur-input")?.value) || 0;
   const rate = parseFloat(document.getElementById("calc-rate-input")?.value) || 1480;
@@ -1029,11 +1031,7 @@ function recalculateFinance() {
   if (perKrwEl) perKrwEl.textContent = `${Math.round(perPersonKrw).toLocaleString()} 원`;
 }
 
-// -----------------------------------------------------------------------------
-// [체크리스트 모듈] 35종 기본 필수품 + 커스텀 추가 + 카테고리 필터링
-// -----------------------------------------------------------------------------
 function initChecklistModule() {
-  // 카테고리 필터 칩 이벤트 바인딩
   document.querySelectorAll(".chk-filter-chip").forEach(chip => {
     chip.addEventListener("click", () => {
       document.querySelectorAll(".chk-filter-chip").forEach(c => c.classList.remove("active"));
@@ -1043,7 +1041,6 @@ function initChecklistModule() {
     });
   });
 
-  // 나만의 준비물 추가 버튼 및 Enter 키 입력
   const addBtn = document.getElementById("add-custom-item-btn");
   const inputEl = document.getElementById("custom-item-input");
   const catEl = document.getElementById("custom-item-cat");
@@ -1076,7 +1073,6 @@ function initChecklistModule() {
     });
   }
 
-  // 첫 렌더링
   renderChecklist();
 }
 
@@ -1084,10 +1080,8 @@ function renderChecklist() {
   const container = document.getElementById("checklist-items-container");
   if (!container) return;
 
-  // 기본 35종 + 사용자 커스텀 준비물 합산
   const allItems = [...quickToolsData.checklist, ...WikiState.customChecklist];
 
-  // 카테고리 필터링 적용
   const filter = WikiState.currentChecklistFilter;
   const filteredItems = filter === "all" 
     ? allItems 
@@ -1095,8 +1089,8 @@ function renderChecklist() {
 
   if (filteredItems.length === 0) {
     container.innerHTML = `
-      <div style="text-align:center; padding:30px; color:var(--text-muted); font-size:0.88rem;">
-        해당 카테고리에 등록된 준비물이 없습니다. 상단에서 직접 추가해 보세요!
+      <div style="text-align:center; padding:30px; color:var(--text-muted); font-size:0.86rem;">
+        해당 카테고리에 등록된 준비물이 없습니다.
       </div>
     `;
     updateChecklistProgress(allItems);
@@ -1156,7 +1150,6 @@ function deleteCustomChecklistItem(id) {
 function updateChecklistProgress(allItems) {
   const items = allItems || [...quickToolsData.checklist, ...WikiState.customChecklist];
   const total = items.length;
-  // 전체 아이템 중 체크된 것만 집계
   const completed = items.filter(it => WikiState.checkedItems.includes(it.id)).length;
   const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
 
@@ -1167,7 +1160,6 @@ function updateChecklistProgress(allItems) {
   if (barEl) barEl.style.width = `${percent}%`;
 }
 
-// 서바이벌 회화 (Web Speech API TTS 음성 발음 재생)
 function renderSurvivalPhrases() {
   const container = document.getElementById("phrase-cards-container");
   if (!container) return;
@@ -1195,11 +1187,10 @@ function speakPhrase(text, lang) {
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = lang === "es" ? "es-ES" : "pt-PT";
-  utterance.rate = 0.85; // 천천히 명확하게
+  utterance.rate = 0.85;
   window.speechSynthesis.speak(utterance);
 }
 
-// 긴급 연락망 렌더링
 function renderEmergencyContacts() {
   const container = document.getElementById("contact-cards-container");
   if (!container) return;
@@ -1217,7 +1208,6 @@ function renderEmergencyContacts() {
 // 10. 비상용 마스터 페이퍼 입력 & A4 인쇄 프리뷰
 // =============================================================================
 function initMasterPaper() {
-  // 저장된 입력값 불러오기
   const fields = [
     "paper-m1-name", "paper-m1-pass", "paper-m2-name", "paper-m2-pass",
     "paper-m3-name", "paper-m3-pass", "paper-m4-name", "paper-m4-pass",
@@ -1257,7 +1247,6 @@ function initScrollAndTopButton() {
   const tooltip = document.getElementById("top-progress-tooltip");
   const progressBar = document.getElementById("reading-progress-bar");
 
-  // SVG 둘레 길이: 2 * PI * 20 ≈ 125.66
   const circumference = 125.66;
 
   window.addEventListener("scroll", () => {
@@ -1265,12 +1254,10 @@ function initScrollAndTopButton() {
     const docHeight = document.documentElement.scrollHeight - window.innerHeight;
     const scrollPercent = docHeight > 0 ? Math.min(100, Math.max(0, (scrollY / docHeight) * 100)) : 0;
 
-    // 1. 최상단 진행도 바 업데이트
     if (progressBar) {
       progressBar.style.width = `${scrollPercent}%`;
     }
 
-    // 2. 250px 초과 시 탑 버튼 페이드인
     if (topBtn) {
       if (scrollY > 250) {
         topBtn.classList.add("visible");
@@ -1279,22 +1266,18 @@ function initScrollAndTopButton() {
       }
     }
 
-    // 3. SVG 원형 게이지 업데이트
     if (circle) {
       const offset = circumference - (scrollPercent / 100) * circumference;
       circle.style.strokeDashoffset = offset;
     }
 
-    // 4. 호버 툴팁 퍼센트 표시
     if (tooltip) {
       tooltip.textContent = `${Math.round(scrollPercent)}%`;
     }
 
-    // 5. 현재 활성 챕터 사이드바 하이라이트 동기화
     syncActiveSidebarChapter();
   }, { passive: true });
 
-  // 탑 버튼 클릭 시 부드러운 상단 스크롤
   if (topBtn) {
     topBtn.addEventListener("click", () => {
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1302,7 +1285,6 @@ function initScrollAndTopButton() {
   }
 }
 
-// 스크롤 위치에 맞춰 사이드바 TOC 활성화 항목 동기화
 function syncActiveSidebarChapter() {
   const cards = document.querySelectorAll(".wiki-chapter-card");
   let currentId = null;
@@ -1326,7 +1308,6 @@ function syncActiveSidebarChapter() {
 // =============================================================================
 function initKeyboardShortcuts() {
   document.addEventListener("keydown", (e) => {
-    // 텍스트 입력 중일 때는 방향키 이동 비활성화
     if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") {
       if (e.key === "Escape") {
         closeAllModals();
@@ -1334,18 +1315,15 @@ function initKeyboardShortcuts() {
       return;
     }
 
-    // ESC 키: 모든 모달 닫기
     if (e.key === "Escape") {
       closeAllModals();
       return;
     }
 
-    // ← (이전 조문/챕터) 또는 [
     if (e.key === "ArrowLeft" || e.key === "[") {
       navigateChapter(-1);
     }
 
-    // → (다음 조문/챕터) 또는 ]
     if (e.key === "ArrowRight" || e.key === "]") {
       navigateChapter(1);
     }
@@ -1381,11 +1359,11 @@ function closeAllModals() {
   closeNotebookModal();
   closeToolsModal();
   closeMasterPaperModal();
+  closeMobileSidebar();
   const toolbar = document.getElementById("annotation-floating-toolbar");
   if (toolbar) toolbar.style.display = "none";
 }
 
-// XSS 방지용 HTML 이스케이프 유틸리티
 function escapeHtml(str) {
   if (!str) return "";
   return str
