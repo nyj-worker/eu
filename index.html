@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light" data-font="sans" data-font-size="normal">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>이베리아 트래블 마스터 2026 | 오픈위키 (Open Wiki)</title>
+  <meta name="description" content="스페인·포르투갈 4050 6인 여행 완벽 가이드 오픈위키 시스템 - 원문 100% 충실도, 3종 뷰어 모드, 실시간 형광펜 및 주석 엔진, 실무 보조 도구 및 상세 체크리스트">
+
+  <!-- 스타일시트 연동 -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ========================================================================= -->
+  <!-- 1. 최상단 실시간 독서 진행도 표시줄 (Reading Progress Bar)                 -->
+  <!-- ========================================================================= -->
+  <div id="reading-progress-container">
+    <div id="reading-progress-bar" style="width: 0%;"></div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 2. 글로벌 헤더 네비게이션 & 제어 도구 모음                                 -->
+  <!-- ========================================================================= -->
+  <header id="global-header">
+    <div class="header-inner">
+      <!-- 로고 및 사이드바 토글 버튼 (모바일 겸용) -->
+      <div class="header-brand-group">
+        <button type="button" id="sidebar-toggle-btn" class="icon-btn" title="사이드바 열기/닫기" aria-label="사이드바 열기/닫기">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+        <div class="brand-title">
+          <span class="flag-icons">🇪🇸🇵🇹</span>
+          <span class="brand-main">이베리아 위키</span>
+          <span class="brand-sub">Iberia Travel Master 2026</span>
+        </div>
+      </div>
+
+      <!-- 중앙: 3종 뷰 모드 스위처 (원문 뷰 / 요약 뷰 / 병기 뷰) -->
+      <div class="view-mode-selector" role="radiogroup" aria-label="뷰어 모드 선택">
+        <button type="button" class="view-mode-btn active" data-view="original" id="view-mode-original">
+          <span class="view-icon">📄</span>
+          <span class="view-text">원문 뷰</span>
+        </button>
+        <button type="button" class="view-mode-btn" data-view="summary" id="view-mode-summary">
+          <span class="view-icon">⚡</span>
+          <span class="view-text">요약 뷰</span>
+        </button>
+        <button type="button" class="view-mode-btn" data-view="dual" id="view-mode-dual">
+          <span class="view-icon">📑</span>
+          <span class="view-text">병기 뷰</span>
+        </button>
+      </div>
+
+      <!-- 우측: 텍스트 크기, 서체, 테마, 실무도구, 학습보관함 버튼 -->
+      <div class="header-controls">
+        <!-- 텍스트 크기 조절 (보통 / 크게 / 아주 크게) -->
+        <div class="control-group font-size-group">
+          <button type="button" class="ctrl-btn font-size-btn active" data-size="normal" title="보통 글자 (16px)">A</button>
+          <button type="button" class="ctrl-btn font-size-btn" data-size="large" title="크게 (18px)">A<small>+</small></button>
+          <button type="button" class="ctrl-btn font-size-btn" data-size="xlarge" title="아주 크게 (20px)">A<small>++</small></button>
+        </div>
+
+        <!-- 서체 변경 (고딕 / 명조) -->
+        <div class="control-group font-family-group">
+          <button type="button" class="ctrl-btn font-family-btn active" data-font="sans" title="고딕체 (가독성)">고딕</button>
+          <button type="button" class="ctrl-btn font-family-btn" data-font="serif" title="명조체 (도서 느낌)">명조</button>
+        </div>
+
+        <!-- 3종 테마 전환 (라이트 / 다크 OLED / 세피아) -->
+        <div class="control-group theme-group">
+          <button type="button" class="ctrl-btn theme-btn active" data-theme="light" title="라이트 모드">☀️</button>
+          <button type="button" class="ctrl-btn theme-btn" data-theme="dark" title="다크 모드 (OLED 딥 블랙)">🌙</button>
+          <button type="button" class="ctrl-btn theme-btn" data-theme="sepia" title="세피아 모드 (눈편한 종이)">📜</button>
+        </div>
+
+        <!-- 실무 보조 도구 모달 버튼 -->
+        <button type="button" id="open-tools-btn" class="action-btn" title="실무 도구 모음 (환율/체크리스트/회화)">
+          <span class="btn-icon">🧰</span>
+          <span class="btn-label">실무 도구</span>
+        </button>
+
+        <!-- 학습 보관함 모달 버튼 -->
+        <button type="button" id="open-notebook-btn" class="action-btn highlight-accent" title="개인화 학습 보관함 (형광펜/메모/백업)">
+          <span class="btn-icon">📚</span>
+          <span class="btn-label">학습 보관함</span>
+          <span id="header-annotation-badge" class="badge-count">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- 3. 메인 앱 컨테이너 (사이드바 + 리사이저 + 본문 콘텐츠)                     -->
+  <!-- ========================================================================= -->
+  <div id="app-container">
+
+    <!-- 좌측 사이드바 (TOC 목차 및 검색) -->
+    <aside id="wiki-sidebar">
+      <div class="sidebar-header">
+        <h2 class="sidebar-title">목차 (TOC)</h2>
+        <span class="sidebar-subtitle">스페인·포르투갈 6인 가이드</span>
+      </div>
+
+      <!-- 실시간 검색 입력창 -->
+      <div class="sidebar-search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="wiki-search-input" placeholder="키워드 검색 (예: 렌페, 소매치기, 빠에야)..." autocomplete="off">
+        <button type="button" id="clear-search-btn" class="clear-search-btn" style="display: none;" title="검색어 지우기">✕</button>
+      </div>
+
+      <!-- 8개 챕터 네비게이션 리스트 -->
+      <nav id="sidebar-nav" class="sidebar-nav">
+        <!-- JS에서 동적으로 목차 항목이 렌더링됩니다 -->
+      </nav>
+
+      <!-- 사이드바 하단 정보 및 단축키 안내 -->
+      <div class="sidebar-footer">
+        <div class="shortcut-guide">
+          <span>⌨️ 단축키:</span>
+          <code>←</code> <code>→</code> 조문 이동 &bull; <code>ESC</code> 닫기
+        </div>
+      </div>
+    </aside>
+
+    <!-- 사이드바 너비 조절 리사이저 바 핸들 -->
+    <div id="sidebar-resizer" title="드래그하여 사이드바 너비 조절 (더블 클릭 시 320px 기본값 복원)">
+      <div class="resizer-handle-indicator"></div>
+    </div>
+
+    <!-- 메인 본문 콘텐츠 뷰어 영역 -->
+    <main id="wiki-main-container">
+      <!-- 뷰 모드별 최상단 안내 배너 -->
+      <section class="wiki-intro-banner">
+        <div class="banner-content">
+          <div class="banner-meta">
+            <span class="meta-tag">📅 10월 28일 ~ 11월 6일 (가을 시즌)</span>
+            <span class="meta-tag">👥 40대 후반~50대 초반 성인 6인 (남3, 여3)</span>
+            <span class="meta-tag">📍 스페인(마드리드/바르셀로나) &bull; 포르투갈(리스본/포르투)</span>
+          </div>
+          <h1 class="banner-title">스페인·포르투갈 4050 성인 6인 팀 여행 마스터 가이드</h1>
+          <p class="banner-desc">
+            형광펜과 밑줄을 긋거나 나만의 메모를 남겨보세요. 모든 주석과 설정은 브라우저에 영구 저장됩니다.
+          </p>
+        </div>
+      </section>
+
+      <!-- 실제 챕터들이 렌더링되는 동적 컨테이너 -->
+      <div id="wiki-content-container" class="view-original">
+        <!-- JS(app.js)에서 data.js 기반으로 챕터 카드들이 렌더링됩니다 -->
+      </div>
+    </main>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 4. 실시간 텍스트 드래그 플로팅 툴바 (Annotation Floating Toolbar)           -->
+  <!-- ========================================================================= -->
+  <div id="annotation-floating-toolbar" class="floating-toolbar" style="display: none;">
+    <div class="toolbar-section">
+      <span class="toolbar-label">형광펜</span>
+      <div class="toolbar-btn-group">
+        <button type="button" class="hl-color-btn" data-color="#FEF08A" data-color-name="노랑" title="노랑 형광펜" style="background-color: #FEF08A;"></button>
+        <button type="button" class="hl-color-btn" data-color="#BBF7D0" data-color-name="초록" title="초록 형광펜" style="background-color: #BBF7D0;"></button>
+        <button type="button" class="hl-color-btn" data-color="#BFDBFE" data-color-name="파랑" title="파랑 형광펜" style="background-color: #BFDBFE;"></button>
+        <button type="button" class="hl-color-btn" data-color="#FBCFE8" data-color-name="분홍" title="분홍 형광펜" style="background-color: #FBCFE8;"></button>
+        <button type="button" class="hl-color-btn" data-color="#E9D5FF" data-color-name="보라" title="보라 형광펜" style="background-color: #E9D5FF;"></button>
+      </div>
+    </div>
+    
+    <div class="toolbar-divider"></div>
+
+    <div class="toolbar-section">
+      <span class="toolbar-label">밑줄</span>
+      <div class="toolbar-btn-group">
+        <button type="button" class="underline-btn" data-underline="solid-red" title="빨강 실선 밑줄">
+          <span class="line-preview line-solid-red"></span>
+        </button>
+        <button type="button" class="underline-btn" data-underline="solid-blue" title="파랑 실선 밑줄">
+          <span class="line-preview line-solid-blue"></span>
+        </button>
+        <button type="button" class="underline-btn" data-underline="dotted-amber" title="황색 점선 밑줄">
+          <span class="line-preview line-dotted-amber"></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="toolbar-divider"></div>
+
+    <div class="toolbar-section">
+      <button type="button" id="tb-memo-btn" class="tb-action-btn" title="선택 텍스트에 개인 메모 작성">
+        <span>📝</span>
+        <span>메모</span>
+      </button>
+      <button type="button" id="tb-erase-btn" class="tb-action-btn" title="하이라이트/밑줄 지우기">
+        <span>🧹</span>
+        <span>지우개</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 5. 플로팅 탑(Top) 버튼 (SVG 실시간 원형 스크롤 진행률 링)                  -->
+  <!-- ========================================================================= -->
+  <button type="button" id="floating-top-btn" class="floating-top-btn" title="맨 위로 스크롤" aria-label="맨 위로 이동">
+    <svg class="progress-ring" width="48" height="48" viewBox="0 0 48 48">
+      <circle class="progress-ring-bg" cx="24" cy="24" r="20"></circle>
+      <circle class="progress-ring-circle" id="top-progress-circle" cx="24" cy="24" r="20" stroke-dasharray="125.66" stroke-dashoffset="125.66"></circle>
+    </svg>
+    <div class="top-btn-inner">
+      <svg class="arrow-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M18 15l-6-6-6 6"/>
+      </svg>
+      <span class="progress-tooltip" id="top-progress-tooltip">0%</span>
+    </div>
+  </button>
+
+  <!-- ========================================================================= -->
+  <!-- 6. 주석 및 메모 관리 모달 (MemoEditModal)                                  -->
+  <!-- ========================================================================= -->
+  <div id="memo-edit-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card memo-modal-card" role="dialog" aria-modal="true" aria-labelledby="memo-modal-title">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="modal-icon">📝</span>
+          <h3 id="memo-modal-title">주석 및 메모 관리</h3>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="closeMemoModal()" aria-label="닫기">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- 선택된 원문 텍스트 인용 박스 -->
+        <div class="memo-quote-box">
+          <span class="quote-label">선택한 문구:</span>
+          <blockquote id="memo-quote-text" class="quote-text"></blockquote>
+        </div>
+
+        <!-- 하이라이트 색상 및 밑줄 스타일 변경 섹션 -->
+        <div class="memo-style-picker">
+          <label class="picker-label">🎨 하이라이트/밑줄 스타일 변경:</label>
+          <div class="style-choice-row">
+            <button type="button" class="style-opt-btn" data-color="#FEF08A" style="background:#FEF08A;" title="노랑 형광펜"></button>
+            <button type="button" class="style-opt-btn" data-color="#BBF7D0" style="background:#BBF7D0;" title="초록 형광펜"></button>
+            <button type="button" class="style-opt-btn" data-color="#BFDBFE" style="background:#BFDBFE;" title="파랑 형광펜"></button>
+            <button type="button" class="style-opt-btn" data-color="#FBCFE8" style="background:#FBCFE8;" title="분홍 형광펜"></button>
+            <button type="button" class="style-opt-btn" data-color="#E9D5FF" style="background:#E9D5FF;" title="보라 형광펜"></button>
+            <span class="picker-sep">|</span>
+            <button type="button" class="style-opt-btn line-opt" data-underline="solid-red" title="빨강 실선">
+              <span class="line-preview line-solid-red"></span>
+            </button>
+            <button type="button" class="style-opt-btn line-opt" data-underline="solid-blue" title="파랑 실선">
+              <span class="line-preview line-solid-blue"></span>
+            </button>
+            <button type="button" class="style-opt-btn line-opt" data-underline="dotted-amber" title="황색 점선">
+              <span class="line-preview line-dotted-amber"></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 메모 작성/수정 텍스트 영역 -->
+        <div class="memo-input-wrap">
+          <label for="memo-textarea" class="picker-label">✏️ 나만의 학습 메모:</label>
+          <textarea id="memo-textarea" rows="4" placeholder="이 부분에 대한 생각이나 현지 주의사항을 메모해 두세요..."></textarea>
+        </div>
+
+        <!-- 2단계 인라인 삭제 확인 영역 -->
+        <div id="memo-delete-confirm-box" class="delete-confirm-box" style="display: none;">
+          <p class="confirm-msg">⚠️ 정말 이 주석(형광펜 및 메모)을 삭제하시겠습니까?</p>
+          <div class="confirm-btn-group">
+            <button type="button" id="confirm-delete-btn" class="btn btn-danger-sm">네, 즉시 삭제</button>
+            <button type="button" id="cancel-delete-btn" class="btn btn-secondary-sm">취소</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" id="trigger-delete-btn" class="btn btn-danger-outline">
+          🗑️ 주석 삭제
+        </button>
+        <div class="modal-action-right">
+          <button type="button" class="btn btn-secondary" onclick="closeMemoModal()">닫기</button>
+          <button type="button" id="save-memo-btn" class="btn btn-primary">저장 완료</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 7. 개인화 학습 보관함 모달 (StudyNotebookModal)                           -->
+  <!-- ========================================================================= -->
+  <div id="study-notebook-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card notebook-modal-card" role="dialog" aria-modal="true" aria-labelledby="notebook-modal-title">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="modal-icon">📚</span>
+          <h3 id="notebook-modal-title">개인화 학습 보관함 (Study Notebook)</h3>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="closeNotebookModal()" aria-label="닫기">✕</button>
+      </div>
+
+      <!-- 상단 필터 & 검색 툴바 -->
+      <div class="notebook-toolbar">
+        <div class="notebook-filter-group">
+          <button type="button" class="filter-chip active" data-filter="all">전체 (<span id="nb-count-all">0</span>)</button>
+          <button type="button" class="filter-chip" data-filter="highlight">형광펜 (<span id="nb-count-hl">0</span>)</button>
+          <button type="button" class="filter-chip" data-filter="underline">밑줄 (<span id="nb-count-ul">0</span>)</button>
+          <button type="button" class="filter-chip" data-filter="memo">메모 작성 (<span id="nb-count-memo">0</span>)</button>
+        </div>
+
+        <div class="notebook-search-box">
+          <input type="text" id="notebook-search-input" placeholder="보관함 내 키워드 검색...">
+        </div>
+      </div>
+
+      <!-- 보관함 주석 리스트 -->
+      <div class="modal-body notebook-body">
+        <div id="notebook-item-list" class="notebook-item-list">
+          <!-- JS에서 동적으로 목록이 주입됩니다 -->
+        </div>
+      </div>
+
+      <!-- 하단 JSON 백업 및 복원 툴바 -->
+      <div class="modal-footer notebook-footer">
+        <div class="backup-tools">
+          <button type="button" class="btn btn-secondary-sm" onclick="exportAnnotationsJSON()">
+            💾 JSON 데이터 내보내기
+          </button>
+          <label class="btn btn-secondary-sm import-label">
+            📂 JSON 불러오기
+            <input type="file" id="import-json-file" accept=".json" style="display: none;" onchange="importAnnotationsJSON(event)">
+          </label>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="closeNotebookModal()">확인 완료</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 8. 실무 보조 도구 모달 (QuickToolsModal: 계산기, 체크리스트, 회화/비상망)     -->
+  <!-- ========================================================================= -->
+  <div id="quick-tools-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card tools-modal-card" role="dialog" aria-modal="true" aria-labelledby="tools-modal-title">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="modal-icon">🧰</span>
+          <h3 id="tools-modal-title">실무 보조 인터랙티브 도구</h3>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="closeToolsModal()" aria-label="닫기">✕</button>
+      </div>
+
+      <!-- 3종 도구 탭 메뉴 -->
+      <div class="tools-tab-bar" role="tablist">
+        <button type="button" class="tool-tab-btn active" data-tab="tab-calc" role="tab">
+          💶 유로 환율 & 6인 더치페이 계산기
+        </button>
+        <button type="button" class="tool-tab-btn" data-tab="tab-check" role="tab">
+          📋 6인 필수 준비물 체크리스트
+        </button>
+        <button type="button" class="tool-tab-btn" data-tab="tab-phrase" role="tab">
+          🗣️ 서바이벌 회화(TTS) & 비상 연락망
+        </button>
+      </div>
+
+      <div class="modal-body tools-body">
+        <!-- 탭 1: 환율 및 6인 정산 계산기 -->
+        <div id="tab-calc" class="tool-tab-panel active">
+          <div class="calc-panel-grid">
+            <div class="calc-card">
+              <h4>💶 유로(EUR) ➔ 원화(KRW) 변환</h4>
+              <div class="calc-input-group">
+                <label for="calc-eur-input">결제 금액 (€ EUR):</label>
+                <div class="input-with-suffix">
+                  <input type="number" id="calc-eur-input" value="120" min="0" step="1">
+                  <span class="suffix">€</span>
+                </div>
+              </div>
+
+              <div class="calc-input-group">
+                <label for="calc-rate-input">적용 환율 (1 EUR = 원):</label>
+                <div class="input-with-suffix">
+                  <input type="number" id="calc-rate-input" value="1480" min="1000" step="10">
+                  <span class="suffix">원</span>
+                </div>
+              </div>
+
+              <div class="calc-result-box">
+                <div class="result-row">
+                  <span>총 환산 금액:</span>
+                  <strong id="calc-krw-total">177,600 원</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="calc-card">
+              <h4>👥 6인 팀 더치페이(1/N) 정산</h4>
+              <div class="calc-input-group">
+                <label for="calc-member-count">정산 인원:</label>
+                <div class="input-with-suffix">
+                  <input type="number" id="calc-member-count" value="6" min="1" max="20">
+                  <span class="suffix">명</span>
+                </div>
+              </div>
+
+              <div class="calc-input-group">
+                <label for="calc-tip-rate">팁 및 기타 가산율 (%):</label>
+                <div class="input-with-suffix">
+                  <input type="number" id="calc-tip-rate" value="0" min="0" max="30">
+                  <span class="suffix">%</span>
+                </div>
+              </div>
+
+              <div class="calc-result-box highlight-box">
+                <div class="result-row">
+                  <span>1인당 부담 유로:</span>
+                  <strong id="calc-per-eur">20.00 €</strong>
+                </div>
+                <div class="result-row total-krw-row">
+                  <span>1인당 부담 원화:</span>
+                  <strong id="calc-per-krw">29,600 원</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 탭 2: 업그레이드된 여행 필수품 및 체크리스트 -->
+        <div id="tab-check" class="tool-tab-panel" style="display: none;">
+          <div class="checklist-header-row">
+            <div class="checklist-intro-text">
+              <strong>🎒 4050 6인 이베리아 여행 필수 준비물 (35종)</strong>
+              <p class="checklist-guide">체크한 항목은 브라우저에 실시간 자동 저장됩니다. 준비 완료 현황을 한눈에 파악하세요.</p>
+            </div>
+            <div class="checklist-progress-wrap">
+              <span id="checklist-progress-text">완료 0 / 35 (0%)</span>
+              <div class="progress-bar-track">
+                <div id="checklist-progress-bar" style="width: 0%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 카테고리 필터 칩 바 -->
+          <div class="checklist-category-filter" id="checklist-category-filter">
+            <button type="button" class="chk-filter-chip active" data-category="all">전체보기</button>
+            <button type="button" class="chk-filter-chip" data-category="필수서류">📄 필수서류</button>
+            <button type="button" class="chk-filter-chip" data-category="금융/결제">💳 금융/결제</button>
+            <button type="button" class="chk-filter-chip" data-category="보안/방범">🔒 보안/방범</button>
+            <button type="button" class="chk-filter-chip" data-category="전자/통신">📱 전자/통신</button>
+            <button type="button" class="chk-filter-chip" data-category="건강/의약">💊 건강/의약</button>
+            <button type="button" class="chk-filter-chip" data-category="의류/신발">👟 의류/신발</button>
+            <button type="button" class="chk-filter-chip" data-category="음식/위생">🍜 음식/위생</button>
+          </div>
+
+          <!-- 내 준비물 직접 추가 폼 -->
+          <div class="add-custom-item-box">
+            <input type="text" id="custom-item-input" placeholder="+ 나만의 준비물 추가 (예: 접이식 포트, 비타민C, 여벌 안경)...">
+            <select id="custom-item-cat">
+              <option value="개인소지품">개인소지품</option>
+              <option value="필수서류">필수서류</option>
+              <option value="전자/통신">전자/통신</option>
+              <option value="건강/의약">건강/의약</option>
+            </select>
+            <button type="button" class="btn btn-primary" id="add-custom-item-btn">추가</button>
+          </div>
+
+          <!-- 체크리스트 아이템 목록 렌더링 컨테이너 -->
+          <div id="checklist-items-container" class="checklist-items-container">
+            <!-- JS에서 동적으로 주입 -->
+          </div>
+        </div>
+
+        <!-- 탭 3: 서바이벌 회화(TTS) & 비상 연락망 -->
+        <div id="tab-phrase" class="tool-tab-panel" style="display: none;">
+          <div class="phrase-section">
+            <h4>🗣️ 현지 필수 서바이벌 회화 (스피커 아이콘을 누르면 발음 재생)</h4>
+            <div id="phrase-cards-container" class="phrase-cards-container">
+              <!-- JS에서 회화 목록 주입 -->
+            </div>
+          </div>
+
+          <div class="contact-section">
+            <h4>🚨 재외공관 및 한국 긴급 연락망</h4>
+            <div id="contact-cards-container" class="contact-cards-container">
+              <!-- JS에서 연락처 목록 주입 -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="closeToolsModal()">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 9. 비상용 아날로그 마스터 페이퍼 입력 & A4 인쇄 프리뷰 모달               -->
+  <!-- ========================================================================= -->
+  <div id="master-paper-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card paper-modal-card" role="dialog" aria-modal="true" aria-labelledby="paper-modal-title">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="modal-icon">🖨️</span>
+          <h3 id="paper-modal-title">비상용 아날로그 마스터 페이퍼 (A4 인쇄 프리뷰)</h3>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="closeMasterPaperModal()" aria-label="닫기">✕</button>
+      </div>
+
+      <div class="modal-body paper-preview-body">
+        <p class="paper-desc-alert">
+          아래 빈칸에 정보를 입력한 뒤 [A4 인쇄하기] 버튼을 누르면 인쇄용 레이아웃으로 깔끔하게 출력할 수 있습니다.
+        </p>
+
+        <!-- 인쇄 영역 Sheet 1 -->
+        <div class="printable-sheet sheet-1">
+          <div class="sheet-header">
+            <h4>[Page 1: 대원 신분 증명 및 여행자보험 정보]</h4>
+            <span class="sheet-tag">이베리아 6인 팀 비상 서류</span>
+          </div>
+
+          <div class="sheet-inputs-grid">
+            <div class="input-card">
+              <label>대원 1 (성명 / 여권번호):</label>
+              <div class="dual-inputs">
+                <input type="text" id="paper-m1-name" placeholder="홍길동 (HONG GILDONG)">
+                <input type="text" id="paper-m1-pass" placeholder="M12345678">
+              </div>
+            </div>
+            <div class="input-card">
+              <label>대원 2 (성명 / 여권번호):</label>
+              <div class="dual-inputs">
+                <input type="text" id="paper-m2-name" placeholder="성명">
+                <input type="text" id="paper-m2-pass" placeholder="여권번호">
+              </div>
+            </div>
+            <div class="input-card">
+              <label>대원 3 (성명 / 여권번호):</label>
+              <div class="dual-inputs">
+                <input type="text" id="paper-m3-name" placeholder="성명">
+                <input type="text" id="paper-m3-pass" placeholder="여권번호">
+              </div>
+            </div>
+            <div class="input-card">
+              <label>대원 4 (성명 / 여권번호):</label>
+              <div class="dual-inputs">
+                <input type="text" id="paper-m4-name" placeholder="성명">
+                <input type="text" id="paper-m4-pass" placeholder="여권번호">
+              </div>
+            </div>
+            <div class="input-card">
+              <label>대원 5 (성명 / 여권번호):</label>
+              <div class="dual-inputs">
+                <input type="text" id="paper-m5-name" placeholder="성명">
+                <input type="text" id="paper-m5-pass" placeholder="여권번호">
+              </div>
+            </div>
+            <div class="input-card">
+              <label>대원 6 (성명 / 여권번호):</label>
+              <div class="dual-inputs">
+                <input type="text" id="paper-m6-name" placeholder="성명">
+                <input type="text" id="paper-m6-pass" placeholder="여권번호">
+              </div>
+            </div>
+          </div>
+
+          <div class="insurance-inputs-row">
+            <div class="input-card full-width">
+              <label>여행자보험 가입사 및 증권/계약번호:</label>
+              <input type="text" id="paper-insurance" placeholder="예: 삼성화재 다이렉트 해외여행보험 / 계약번호 2026-98765432">
+            </div>
+            <div class="input-card full-width">
+              <label>해외 긴급 의료지원 센터 직통 번호:</label>
+              <input type="text" id="paper-medical-tel" placeholder="예: +82-2-1234-5678 (24시간 한국어 어시스턴스)">
+            </div>
+          </div>
+        </div>
+
+        <!-- 인쇄 영역 Sheet 2 -->
+        <div class="printable-sheet sheet-2">
+          <div class="sheet-header">
+            <h4>[Page 2: 현지 비상 연락처 및 4대 도시 숙소 정보]</h4>
+            <span class="sheet-tag">택시 기사용 영문 주소</span>
+          </div>
+
+          <div class="fixed-contacts-table">
+            <table class="compact-table">
+              <thead>
+                <tr>
+                  <th>기관명</th>
+                  <th>긴급 전화번호</th>
+                  <th>비고</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>주스페인 대한민국 대사관 (마드리드)</td>
+                  <td><strong>+34 913 514 133</strong></td>
+                  <td>사건사고 비상 +34 647 812 770</td>
+                </tr>
+                <tr>
+                  <td>바르셀로나 대한민국 총영사관</td>
+                  <td><strong>+34 934 856 046</strong></td>
+                  <td>당직전화 +34 682 862 431</td>
+                </tr>
+                <tr>
+                  <td>주포르투갈 대한민국 대사관 (리스본)</td>
+                  <td><strong>+351 217 937 200</strong></td>
+                  <td>긴급전화 +351 910 795 055</td>
+                </tr>
+                <tr>
+                  <td>하나카드 해외분실신고 센터</td>
+                  <td><strong>+82 2 950 8510</strong></td>
+                  <td>24시간 즉시 정지</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="lodging-inputs-grid">
+            <div class="input-card">
+              <label>마드리드 숙소 영문 주소 & 전화번호:</label>
+              <textarea id="paper-hotel-madrid" rows="2" placeholder="Chamberí district, Madrid / Tel: +34..."></textarea>
+            </div>
+            <div class="input-card">
+              <label>바르셀로나 숙소 영문 주소 & 전화번호:</label>
+              <textarea id="paper-hotel-bcn" rows="2" placeholder="Eixample Derecho, Barcelona / Tel: +34..."></textarea>
+            </div>
+            <div class="input-card">
+              <label>리스본 숙소 영문 주소 & 전화번호:</label>
+              <textarea id="paper-hotel-lisbon" rows="2" placeholder="Avenida da Liberdade, Lisbon / Tel: +351..."></textarea>
+            </div>
+            <div class="input-card">
+              <label>포르투 숙소 영문 주소 & 전화번호:</label>
+              <textarea id="paper-hotel-porto" rows="2" placeholder="Ribeira / Porto Downtown / Tel: +351..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeMasterPaperModal()">취소</button>
+        <button type="button" class="btn btn-primary" onclick="window.print()">🖨️ A4 용지 인쇄하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 데이터 모듈 및 애플리케이션 스크립트 로드 -->
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
